@@ -185,6 +185,22 @@ module "git-clone" {
   version = "~> 1.0"
 }
 
+module "dotfiles" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/dotfiles/coder"
+  version  = "~> 1.0"
+  agent_id = coder_devcontainer.repo[0].subagent_id
+}
+
+module "code-server" {
+  count  = data.coder_workspace.me.start_count
+  source = "registry.coder.com/coder/code-server/coder"
+  version = "~> 1.0"
+  agent_id = coder_devcontainer.repo[0].subagent_id
+  folder = "/workspaces/dc-test"
+  order    = 2
+}
+
 # Automatically start the devcontainer for the workspace.
 resource "coder_devcontainer" "repo" {
   count            = data.coder_workspace.me.start_count
@@ -192,11 +208,28 @@ resource "coder_devcontainer" "repo" {
   workspace_folder = "~/${module.git-clone[0].folder_name}"
 }
 
-module "dotfiles" {
+resource "coder_app" "vscode" {
   count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/dotfiles/coder"
-  version  = "1.4.1"
-  agent_id = coder_devcontainer.repo[0].subagent_id
+  slug     = "vscode"
+  display_name = "VS Code Desktop"
+
+  url = join("", [
+    "vscode://coder.coder-remote/open",
+    "?owner=",
+    data.coder_workspace_owner.me.name,
+    "&workspace=",
+    data.coder_workspace.me.name,
+    "&url=",
+    data.coder_workspace.me.access_url,
+    "&agent=repo",
+    "&folder=/workspaces/dc-test",
+    "&token=$SESSION_TOKEN",
+  ])
+
+  external  = true
+  icon      = "/icon/code.svg"
+  order     = 1
+  agent_id  = coder_devcontainer.repo[0].subagent_id
 }
 
 resource "docker_volume" "home_volume" {

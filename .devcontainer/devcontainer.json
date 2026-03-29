@@ -1,4 +1,11 @@
 {
   "image": "ghcr.io/cbguder/dc-test:latest",
-  "name": "potato"
+  "name": "potato",
+  "customizations": {
+    "coder": {
+      "displayApps": {
+        "vscode": false
+      }
+    }
+  }
 }

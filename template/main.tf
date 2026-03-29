@@ -192,6 +192,13 @@ resource "coder_devcontainer" "repo" {
   workspace_folder = "~/${module.git-clone[0].folder_name}"
 }
 
+module "dotfiles" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/dotfiles/coder"
+  version  = "1.4.1"
+  agent_id = coder_devcontainer.repo[0].subagent_id
+}
+
 resource "docker_volume" "home_volume" {
   name = "coder-${data.coder_workspace.me.id}-home"
   # Protect the volume from being deleted due to changes in attributes.
